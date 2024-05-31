@@ -36,6 +36,19 @@ export default class AuthService {
             token,
         }
     }
+
+    async validateToken(token: string): Promise<string> {
+        try {
+            const decoded = jwt.verify(token, config.auth.secret) as {
+                id: string;
+            };
+
+            return decoded.id
+
+        } catch (error) {
+            throw new AuthError("Invalid token")
+        }
+    }
 }
 
 //38:21
