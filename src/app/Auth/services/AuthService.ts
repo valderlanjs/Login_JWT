@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import AuthError from "@app/Auth/exceptions/AuthError";
 import config from "@/config";
+import { getValue, setValue } from "@/lib/redis";
 
 export default class AuthService {
 
@@ -23,9 +24,7 @@ export default class AuthService {
         const { id, fullName } = user;
 
         //Generate token
-        const token = jwt.sign({ id }, config.auth.secret, {
-            expiresIn: config.auth.expiresIn,
-        });
+        
 
         return {
             user: {
@@ -33,12 +32,21 @@ export default class AuthService {
                 fullName,
                 email,
             },
-            token,
+            token: jwt.sign({ id }, config.auth.secret, {
+                expiresIn: config.auth.expiresIn,
+            }),
         }
+    }
+
+    async signOut(token: string): Promise<void> {
+        await this.blacklistToken(token)
     }
 
     async validateToken(token: string): Promise<string> {
         try {
+            if (await this.isTokenBlacklisted(token)) 
+                throw new AuthError("Token was blacklisted");
+
             const decoded = jwt.verify(token, config.auth.secret) as {
                 id: string;
             };
@@ -48,6 +56,16 @@ export default class AuthService {
         } catch (error) {
             throw new AuthError("Invalid token")
         }
+    }
+
+    private async isTokenBlacklisted(token: string): Promise<boolean> {
+        const blacklistedToken = await getValue(`tokens:invalidated:${token}`);
+
+        return !!blacklistedToken;
+    }
+
+    private async blacklistToken(token: string): Promise<void> {
+        await setValue(`tokens:ivalidated:${token}`, true);
     }
 }
 

@@ -14,7 +14,10 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         //verifica se token é valido
         const id = await new AuthService().validateToken(token);
 
-        req.user = { id, token}
+        req.user = { id, token }
+
+        return next();
+        
     } catch (error) {
         if (error instanceof AuthError) {
             return res.status(401).send();
@@ -22,6 +25,4 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
         return res.status(500).json({ error });
     }
-    
-    return next();
 }

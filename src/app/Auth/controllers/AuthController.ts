@@ -9,15 +9,24 @@ class AuthController {
         try {
           const { user, token } = await new AuthService().signIn(email, password);
 
-          return res.status(200).json({ user, token });
+          return res.json({ 
+            user, token 
+        });
+        
         } catch (error) {
-            if (error instanceof AuthError) return res.status(401).send();
+            if (error instanceof AuthError) {
+                return res.status(401).send();
+            }
 
             return res.status(500).json({ error });
         }
     }
 
-    async destroy() {}
+    async destroy(req: Request, res: Response): Promise<Response> {
+        req.user.id && (await new AuthService().signOut(req.user.token));
+
+        return res.status(204).send();
+    }
 }
 
 export default new AuthController();
