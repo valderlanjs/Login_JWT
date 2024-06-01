@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import AuthService from '@app/Auth/services/AuthService';
 import AuthError from '@app/Auth/exceptions/AuthError';
 
+
 class AuthController {
     async create(req: Request, res: Response): Promise<Response> {
         const { email, password } = req.body;
